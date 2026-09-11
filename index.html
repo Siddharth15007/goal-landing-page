@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Goal — Something is coming.</title>
+  <meta name="description" content="Goals are easy. Finishing them isn't. Join the waitlist for the app that finally changes that." />
+  <meta name="robots" content="noindex, nofollow" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── Reset & tokens ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #080D1C;
+      --surface:    #0E1428;
+      --border:     rgba(124, 58, 237, 0.18);
+      --gold:       #F59E0B;
+      --gold-light: #FCD34D;
+      --purple:     #7C3AED;
+      --purple-dim: rgba(124, 58, 237, 0.15);
+      --text:       #E2E8F0;
+      --muted:      #94A3B8;
+      --ff-head:    'Syne', sans-serif;
+      --ff-body:    'DM Sans', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--ff-body);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ─── Background orbs ─── */
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.35;
+      will-change: transform;
+      animation: drift 18s ease-in-out infinite alternate;
+    }
+    .orb-1 {
+      width: 640px; height: 640px;
+      background: radial-gradient(circle, #7C3AED 0%, transparent 70%);
+      top: -180px; left: -180px;
+      animation-duration: 22s;
+    }
+    .orb-2 {
+      width: 480px; height: 480px;
+      background: radial-gradient(circle, #F59E0B 0%, transparent 70%);
+      bottom: -140px; right: -140px;
+      opacity: 0.2;
+      animation-duration: 17s;
+      animation-direction: alternate-reverse;
+    }
+    .orb-3 {
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, #1E40AF 0%, transparent 70%);
+      top: 50%; left: 55%;
+      opacity: 0.25;
+      animation-duration: 26s;
+    }
+    @keyframes drift {
+      0%   { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(40px, 30px) scale(1.06); }
+    }
+
+    /* ─── Layout ─── */
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ─── Nav bar ─── */
+    nav {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 32px 24px 0;
+    }
+    .logo {
+      font-family: var(--ff-head);
+      font-weight: 800;
+      font-size: 1.25rem;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+      text-transform: uppercase;
+      user-select: none;
+    }
+    .logo span {
+      color: var(--text);
+      opacity: 0.5;
+    }
+
+    /* ─── Hero ─── */
+    .hero {
+      padding: 100px 0 64px;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--purple-dim);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 16px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      color: #A78BFA;
+      text-transform: uppercase;
+      margin-bottom: 36px;
+    }
+    .badge-dot {
+      width: 6px; height: 6px;
+      background: var(--gold);
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.4; transform: scale(0.7); }
+    }
+
+    h1 {
+      font-family: var(--ff-head);
+      font-weight: 800;
+      font-size: clamp(2.6rem, 7vw, 4rem);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      color: #F1F5F9;
+      margin-bottom: 24px;
+    }
+    h1 em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--gold) 0%, #EC4899 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subhead {
+      font-size: clamp(1rem, 2.5vw, 1.2rem);
+      font-weight: 300;
+      color: var(--muted);
+      max-width: 460px;
+      margin: 0 auto 48px;
+      line-height: 1.7;
+    }
+
+    /* ─── Form ─── */
+    .form-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 420px;
+      margin: 0 auto;
+    }
+    .input-row {
+      display: flex;
+      gap: 0;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 4px 4px 4px 18px;
+      align-items: center;
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+    .input-row:focus-within {
+      border-color: var(--purple);
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.2);
+    }
+    .input-row input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-family: var(--ff-body);
+      font-size: 0.95rem;
+      padding: 10px 0;
+      min-width: 0;
+    }
+    .input-row input::placeholder { color: var(--muted); }
+
+    .btn-submit {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, var(--gold) 0%, #D97706 100%);
+      color: #0A0F1E;
+      font-family: var(--ff-body);
+      font-weight: 600;
+      font-size: 0.9rem;
+      letter-spacing: 0.03em;
+      border: none;
+      border-radius: 9px;
+      padding: 11px 22px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: filter 0.2s, transform 0.15s;
+      flex-shrink: 0;
+    }
+    .btn-submit:hover { filter: brightness(1.12); transform: translateY(-1px); }
+    .btn-submit:active { filter: brightness(0.95); transform: translateY(0); }
+    .btn-submit svg { width: 15px; height: 15px; }
+
+    /* Success state */
+    .success-msg {
+      display: none;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 12px;
+      padding: 16px 20px;
+      color: #6EE7B7;
+      font-size: 0.9rem;
+      text-align: center;
+      animation: fadeIn 0.4s ease;
+    }
+    .success-msg.visible { display: block; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .privacy-note {
+      font-size: 0.75rem;
+      color: rgba(148,163,184,0.5);
+      text-align: center;
+    }
+
+    /* ─── Social proof ─── */
+    .social-proof {
+      margin-top: 56px;
+      text-align: center;
+    }
+    .counter-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 10px 24px;
+    }
+    .avatar-stack {
+      display: flex;
+    }
+    .avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: 2px solid var(--surface);
+      background: linear-gradient(135deg, var(--purple) 0%, #1E40AF 100%);
+      margin-left: -8px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+    .avatar:first-child { margin-left: 0; }
+    .avatar:nth-child(2) { background: linear-gradient(135deg, #EC4899 0%, #7C3AED 100%); }
+    .avatar:nth-child(3) { background: linear-gradient(135deg, var(--gold) 0%, #EC4899 100%); color: #0A0F1E; }
+    .avatar:nth-child(4) { background: linear-gradient(135deg, #10B981 0%, #1E40AF 100%); }
+    .avatar.more {
+      background: rgba(255,255,255,0.08);
+      color: var(--muted);
+    }
+
+    .counter-text {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .counter-text strong {
+      color: var(--gold);
+      font-weight: 600;
+    }
+
+    /* ─── Benefits ─── */
+    .benefits {
+      padding: 88px 0;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    @media (max-width: 600px) {
+      .benefits { grid-template-columns: 1fr; gap: 16px; }
+    }
+
+    .benefit-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 24px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .benefit-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 0% 0%, rgba(124,58,237,0.07) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .benefit-card:hover {
+      border-color: rgba(124,58,237,0.4);
+      transform: translateY(-3px);
+    }
+
+    .benefit-icon {
+      font-size: 1.5rem;
+      margin-bottom: 16px;
+      display: block;
+    }
+    .benefit-card h3 {
+      font-family: var(--ff-head);
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 10px;
+    }
+    .benefit-card p {
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    /* ─── Divider ─── */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+      margin: 0 auto;
+      max-width: 400px;
+    }
+
+    /* ─── Footer ─── */
+    footer {
+      padding: 48px 0 40px;
+      text-align: center;
+    }
+    .footer-logo {
+      font-family: var(--ff-head);
+      font-weight: 800;
+      font-size: 1rem;
+      letter-spacing: 0.1em;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    footer p {
+      font-size: 0.8rem;
+      color: rgba(148,163,184,0.4);
+    }
+    footer a {
+      color: rgba(148,163,184,0.6);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    footer a:hover { color: var(--gold); }
+
+    /* ─── Mobile tweaks ─── */
+    @media (max-width: 480px) {
+      .hero { padding: 72px 0 48px; }
+      .input-row {
+        flex-direction: column;
+        padding: 12px 16px;
+        gap: 10px;
+      }
+      .input-row input { width: 100%; }
+      .btn-submit { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background -->
+  <div class="bg-layer" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- Nav -->
+  <nav aria-label="Site header">
+    <span class="logo">Goal<span> ·</span></span>
+  </nav>
+
+  <!-- Hero -->
+  <main>
+    <section class="wrapper hero" aria-labelledby="headline">
+      <div class="badge" role="status" aria-label="Coming soon">
+        <span class="badge-dot" aria-hidden="true"></span>
+        Coming Soon
+      </div>
+
+      <h1 id="headline">
+        Goals are easy.<br /><em>Finishing them isn't.</em>
+      </h1>
+
+      <p class="subhead">
+        Something is being built that will finally close the gap between where you are and where you want to be.
+      </p>
+
+      <!-- Formspree form — replace YOUR_FORMSPREE_ID -->
+      <div class="form-wrap">
+        <form
+          id="waitlist-form"
+          action="https://formspree.io/f/YOUR_FORMSPREE_ID"
+          method="POST"
+          novalidate
+        >
+          <div class="input-row">
+            <label for="email-input" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Your email address</label>
+            <input
+              id="email-input"
+              type="email"
+              name="email"
+              placeholder="your@email.com"
+              autocomplete="email"
+              required
+            />
+            <button class="btn-submit" type="submit" id="submit-btn" aria-label="Join the waitlist">
+              Join the waitlist
+              <svg viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M8.5 1.5L13.5 7.5M13.5 7.5L8.5 13.5M13.5 7.5H1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+        </form>
+
+        <div class="success-msg" id="success-msg" role="alert" aria-live="polite">
+          ✦ You're in. We'll reach out when it's ready — stay curious.
+        </div>
+
+        <p class="privacy-note">No spam. No noise. Just one message when it's ready.</p>
+      </div>
+
+      <!-- Social proof -->
+      <div class="social-proof" aria-label="Waitlist count">
+        <div class="counter-row">
+          <div class="avatar-stack" aria-hidden="true">
+            <div class="avatar">S</div>
+            <div class="avatar">A</div>
+            <div class="avatar">K</div>
+            <div class="avatar">R</div>
+            <div class="avatar more">+</div>
+          </div>
+          <span class="counter-text">
+            <strong id="counter">247</strong>+ people already on the list
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Benefits -->
+    <section class="wrapper" aria-label="What to expect">
+      <div class="benefits">
+        <article class="benefit-card">
+          <span class="benefit-icon" aria-hidden="true">◈</span>
+          <h3>Built for you</h3>
+          <p>Not generic advice. Something that adapts to the shape of your life, not a template of someone else's.</p>
+        </article>
+        <article class="benefit-card">
+          <span class="benefit-icon" aria-hidden="true">◉</span>
+          <h3>Keeps you going</h3>
+          <p>Most tools are great on day one. This is built for day thirty-seven — when the feeling wears off.</p>
+        </article>
+        <article class="benefit-card">
+          <span class="benefit-icon" aria-hidden="true">◈</span>
+          <h3>Feels like progress</h3>
+          <p>No guilt, no overwhelm. Every step is a step. You'll feel momentum before you even realize you have it.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <div class="wrapper">
+    <div class="divider" aria-hidden="true"></div>
+  </div>
+  <footer class="wrapper" role="contentinfo">
+    <div class="footer-logo">Goal ·</div>
+    <p>Questions? <a href="mailto:hello@goalapp.co" id="footer-email">hello@goalapp.co</a></p>
+    <p style="margin-top:8px;">&copy; 2025 Goal. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // ─── Form submission (Formspree AJAX) ───
+    const form       = document.getElementById('waitlist-form');
+    const successMsg = document.getElementById('success-msg');
+    const submitBtn  = document.getElementById('submit-btn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById('email-input').value.trim();
+      if (!email || !email.includes('@')) return;
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending…';
+
+      try {
+        const res = await fetch(form.action, {
+          method: 'POST',
+          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+
+        if (res.ok) {
+          form.style.display = 'none';
+          successMsg.classList.add('visible');
+          // Tick up the counter
+          const counter = document.getElementById('counter');
+          counter.textContent = String(parseInt(counter.textContent, 10) + 1);
+        } else {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = 'Try again →';
+        }
+      } catch {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Try again →';
+      }
+    });
+
+    // ─── Subtle counter animation on load ───
+    (function animateCounter() {
+      const el     = document.getElementById('counter');
+      const target = parseInt(el.textContent, 10);
+      const start  = target - 18;
+      let   cur    = start;
+      const step   = () => {
+        cur++;
+        el.textContent = cur;
+        if (cur < target) requestAnimationFrame(step);
+      };
+      el.textContent = start;
+      setTimeout(() => requestAnimationFrame(step), 600);
+    })();
+  </script>
+
+</body>
+</html>
