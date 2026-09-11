@@ -6,6 +6,12 @@
   <title>GOAL// — Something is loading.</title>
   <meta name="description" content="Goals are easy. Finishing them isn't. Join the waitlist." />
   <meta name="robots" content="noindex, nofollow" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <!-- CSP fallback (Vercel sends this as an HTTP header too via vercel.json) -->
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' 'unsafe-inline' https://*.list-manage.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://*.list-manage.com; img-src 'self' data:; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://*.list-manage.com;" />
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
 
   <!-- Preconnect -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -885,7 +891,12 @@
         <div class="form-panel reveal delay-3">
           <div class="form-title">Request early access</div>
 
-          <form id="mc-form" novalidate>
+          <form id="mc-form" novalidate autocomplete="off">
+            <!-- Honeypot — bots fill this, humans don't (hidden via CSS) -->
+            <div style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true">
+              <label for="mc-hp">Leave blank</label>
+              <input id="mc-hp" name="b_hp" type="text" tabindex="-1" autocomplete="off" />
+            </div>
             <div class="mc-field">
               <label for="mc-email">Email address</label>
               <input
@@ -894,6 +905,7 @@
                 name="EMAIL"
                 placeholder="you@domain.com"
                 autocomplete="email"
+                maxlength="254"
                 required
               />
             </div>
@@ -1020,31 +1032,80 @@
     ───────────────────────────────────────── */
     var MC_ACTION_URL = 'https://YOUR-DOMAIN.us1.list-manage.com/subscribe/post-json?u=YOUR_U_PARAM&id=YOUR_LIST_ID&c=?';
 
-    var form      = document.getElementById('mc-form');
-    var emailInp  = document.getElementById('mc-email');
-    var btn       = document.getElementById('mc-btn');
-    var errEl     = document.getElementById('mc-error');
-    var successEl = document.getElementById('mc-success');
+    var form       = document.getElementById('mc-form');
+    var emailInp   = document.getElementById('mc-email');
+    var honeypotEl = document.getElementById('mc-hp');
+    var btn        = document.getElementById('mc-btn');
+    var errEl      = document.getElementById('mc-error');
+    var successEl  = document.getElementById('mc-success');
+
+    // ── Rate limiting: prevent rapid resubmissions ──
+    var COOLDOWN_MS   = 5000;  // 5 seconds between attempts
+    var lastSubmitAt  = 0;
+
+    // ── Email validation regex (RFC 5321 practical subset) ──
+    var EMAIL_RE = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+
+    function sanitiseEmail(raw) {
+      // Strip whitespace, limit length to 254 chars (RFC 5321 max)
+      return String(raw).trim().slice(0, 254);
+    }
 
     form.addEventListener('submit', function(e) {
       e.preventDefault();
       errEl.classList.remove('visible');
 
-      var email = emailInp.value.trim();
-      var valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-      if (!valid) { errEl.classList.add('visible'); emailInp.focus(); return; }
+      // ── 1. Honeypot check — bots fill hidden fields ──
+      if (honeypotEl && honeypotEl.value !== '') {
+        // Silently pretend success so bots don't know they failed
+        form.style.display = 'none';
+        successEl.classList.add('visible');
+        return;
+      }
 
+      // ── 2. Rate limit check ──
+      var now = Date.now();
+      if (now - lastSubmitAt < COOLDOWN_MS) {
+        var wait = Math.ceil((COOLDOWN_MS - (now - lastSubmitAt)) / 1000);
+        errEl.textContent = 'ERR // Too fast. Wait ' + wait + 's before retrying.';
+        errEl.classList.add('visible');
+        return;
+      }
+
+      // ── 3. Sanitise + validate email ──
+      var email = sanitiseEmail(emailInp.value);
+      if (!email || !EMAIL_RE.test(email)) {
+        errEl.textContent = 'ERR // Enter a valid email address.';
+        errEl.classList.add('visible');
+        emailInp.focus();
+        return;
+      }
+
+      lastSubmitAt = Date.now();
       btn.disabled = true;
       btn.textContent = '> TRANSMITTING...';
 
-      // Mailchimp JSONP — avoids CORS on their subscribe endpoint
-      var cbName = 'mc_cb_' + Date.now();
+      // ── 4. Mailchimp JSONP (avoids CORS on their endpoint) ──
+      var cbName = 'mc_cb_' + now;
       var url = MC_ACTION_URL.replace('&c=?', '&c=' + cbName)
                              + '&EMAIL=' + encodeURIComponent(email);
 
+      // Timeout: if Mailchimp doesn't respond in 8s, show error
+      var timeoutId = setTimeout(function() {
+        if (window[cbName]) {
+          delete window[cbName];
+          btn.disabled = false;
+          btn.textContent = '> JOIN THE WAITLIST_';
+          errEl.textContent = 'ERR // Request timed out. Please retry.';
+          errEl.classList.add('visible');
+          lastSubmitAt = 0; // reset so they can try again
+        }
+      }, 8000);
+
       window[cbName] = function(res) {
+        clearTimeout(timeoutId);
         delete window[cbName];
-        if (script.parentNode) script.parentNode.removeChild(script);
+        if (script && script.parentNode) script.parentNode.removeChild(script);
 
         if (res.result === 'success') {
           form.style.display = 'none';
@@ -1056,7 +1117,10 @@
         } else {
           btn.disabled = false;
           btn.textContent = '> JOIN THE WAITLIST_';
-          errEl.textContent = 'ERR // ' + (res.msg || 'Something went wrong. Try again.');
+          // Sanitise Mailchimp's error message before displaying it
+          var rawMsg = res.msg || 'Something went wrong. Try again.';
+          var safeMsg = rawMsg.replace(/<[^>]*>/g, '').slice(0, 120);
+          errEl.textContent = 'ERR // ' + safeMsg;
           errEl.classList.add('visible');
         }
       };
@@ -1064,10 +1128,12 @@
       var script = document.createElement('script');
       script.src = url;
       script.onerror = function() {
+        clearTimeout(timeoutId);
         btn.disabled = false;
         btn.textContent = '> JOIN THE WAITLIST_';
         errEl.textContent = 'ERR // Network error. Please try again.';
         errEl.classList.add('visible');
+        lastSubmitAt = 0;
       };
       document.body.appendChild(script);
     });
