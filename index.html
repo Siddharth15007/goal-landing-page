@@ -1007,69 +1007,69 @@
   <!-- ─── SCRIPTS ─── -->
   <script>
     /* ─────────────────────────────────────────
-       SENDER.NET SUBMISSION
-       SETUP (takes ~2 minutes):
-       1. sender.net → Forms → Create new form → get your Form ID
-          OR: Audience → API → generate an API token with "subscriber:create" scope
-       2. Replace SENDER_API_TOKEN with your Bearer token
-       3. Replace SENDER_GROUP_ID with your subscriber group/list ID
-          (Audience → Groups → copy the numeric ID from the URL)
+       MAILCHIMP AJAX SUBMISSION
+       SETUP:
+       1. Mailchimp → Audience → Signup forms → Embedded forms
+       2. Copy the form action URL from the generated <form> tag
+       3. Change  subscribe/post  →  subscribe/post-json
+       4. Append  &c=?  at the very end
+       5. Paste it below as MC_ACTION_URL
+       Example:
+         https://xyz.us1.list-manage.com/subscribe/post-json
+         ?u=XXXXXXXXXX&id=YYYYYYYYYY&c=?
     ───────────────────────────────────────── */
-    const SENDER_API_TOKEN = 'YOUR_SENDER_API_TOKEN';
-    const SENDER_GROUP_ID  = 'YOUR_SENDER_GROUP_ID';   // optional but recommended
+    var MC_ACTION_URL = 'https://YOUR-DOMAIN.us1.list-manage.com/subscribe/post-json?u=YOUR_U_PARAM&id=YOUR_LIST_ID&c=?';
 
-    const form      = document.getElementById('mc-form');
-    const emailInp  = document.getElementById('mc-email');
-    const btn       = document.getElementById('mc-btn');
-    const errEl     = document.getElementById('mc-error');
-    const successEl = document.getElementById('mc-success');
+    var form      = document.getElementById('mc-form');
+    var emailInp  = document.getElementById('mc-email');
+    var btn       = document.getElementById('mc-btn');
+    var errEl     = document.getElementById('mc-error');
+    var successEl = document.getElementById('mc-success');
 
-    form.addEventListener('submit', async function(e) {
+    form.addEventListener('submit', function(e) {
       e.preventDefault();
       errEl.classList.remove('visible');
 
-      const email = emailInp.value.trim();
-      const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      var email = emailInp.value.trim();
+      var valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
       if (!valid) { errEl.classList.add('visible'); emailInp.focus(); return; }
 
       btn.disabled = true;
       btn.textContent = '> TRANSMITTING...';
 
-      try {
-        const body = { email: email };
-        if (SENDER_GROUP_ID && SENDER_GROUP_ID !== 'YOUR_SENDER_GROUP_ID') {
-          body.groups = [SENDER_GROUP_ID];
-        }
+      // Mailchimp JSONP — avoids CORS on their subscribe endpoint
+      var cbName = 'mc_cb_' + Date.now();
+      var url = MC_ACTION_URL.replace('&c=?', '&c=' + cbName)
+                             + '&EMAIL=' + encodeURIComponent(email);
 
-        const res = await fetch('https://api.sender.net/v2/subscribers', {
-          method: 'POST',
-          headers: {
-            'Authorization': 'Bearer ' + SENDER_API_TOKEN,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          body: JSON.stringify(body),
-        });
+      window[cbName] = function(res) {
+        delete window[cbName];
+        if (script.parentNode) script.parentNode.removeChild(script);
 
-        const data = await res.json();
-
-        if (res.ok && (data.status === true || data.data)) {
+        if (res.result === 'success') {
           form.style.display = 'none';
           successEl.classList.add('visible');
-          // Tick up both counters
           ['counter', 'counter-m'].forEach(function(id) {
-            const el = document.getElementById(id);
+            var el = document.getElementById(id);
             if (el) el.textContent = String(parseInt(el.textContent, 10) + 1);
           });
         } else {
-          throw new Error(data.message || data.error || 'Unknown error');
+          btn.disabled = false;
+          btn.textContent = '> JOIN THE WAITLIST_';
+          errEl.textContent = 'ERR // ' + (res.msg || 'Something went wrong. Try again.');
+          errEl.classList.add('visible');
         }
-      } catch (err) {
+      };
+
+      var script = document.createElement('script');
+      script.src = url;
+      script.onerror = function() {
         btn.disabled = false;
         btn.textContent = '> JOIN THE WAITLIST_';
-        errEl.textContent = 'ERR // ' + err.message;
+        errEl.textContent = 'ERR // Network error. Please try again.';
         errEl.classList.add('visible');
-      }
+      };
+      document.body.appendChild(script);
     });
 
     /* ─── Counter animation on load ─── */
