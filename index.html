@@ -1007,14 +1007,16 @@
   <!-- ─── SCRIPTS ─── -->
   <script>
     /* ─────────────────────────────────────────
-       MAILCHIMP AJAX SUBMISSION
-       Replace MC_ACTION_URL with your list's
-       subscribe/post-json endpoint.
-       Format:
-         https://YOURDOMAIN.us1.list-manage.com/subscribe/post-json
-         ?u=XXXXXXXXXX&id=YYYYYYYYYY&c=?
+       SENDER.NET SUBMISSION
+       SETUP (takes ~2 minutes):
+       1. sender.net → Forms → Create new form → get your Form ID
+          OR: Audience → API → generate an API token with "subscriber:create" scope
+       2. Replace SENDER_API_TOKEN with your Bearer token
+       3. Replace SENDER_GROUP_ID with your subscriber group/list ID
+          (Audience → Groups → copy the numeric ID from the URL)
     ───────────────────────────────────────── */
-    const MC_ACTION_URL = 'https://YOUR-DOMAIN.us1.list-manage.com/subscribe/post-json?u=YOUR_U_PARAM&id=YOUR_LIST_ID&c=?';
+    const SENDER_API_TOKEN = 'YOUR_SENDER_API_TOKEN';
+    const SENDER_GROUP_ID  = 'YOUR_SENDER_GROUP_ID';   // optional but recommended
 
     const form      = document.getElementById('mc-form');
     const emailInp  = document.getElementById('mc-email');
@@ -1022,7 +1024,7 @@
     const errEl     = document.getElementById('mc-error');
     const successEl = document.getElementById('mc-success');
 
-    form.addEventListener('submit', function(e) {
+    form.addEventListener('submit', async function(e) {
       e.preventDefault();
       errEl.classList.remove('visible');
 
@@ -1033,40 +1035,41 @@
       btn.disabled = true;
       btn.textContent = '> TRANSMITTING...';
 
-      // Mailchimp JSONP approach (bypasses CORS on their subscribe endpoint)
-      const cbName = 'mc_cb_' + Date.now();
-      const url = MC_ACTION_URL.replace('&c=?', '&c=' + cbName)
-                               + '&EMAIL=' + encodeURIComponent(email);
+      try {
+        const body = { email: email };
+        if (SENDER_GROUP_ID && SENDER_GROUP_ID !== 'YOUR_SENDER_GROUP_ID') {
+          body.groups = [SENDER_GROUP_ID];
+        }
 
-      window[cbName] = function(res) {
-        delete window[cbName];
-        if (script.parentNode) script.parentNode.removeChild(script);
+        const res = await fetch('https://api.sender.net/v2/subscribers', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + SENDER_API_TOKEN,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify(body),
+        });
 
-        if (res.result === 'success') {
+        const data = await res.json();
+
+        if (res.ok && (data.status === true || data.data)) {
           form.style.display = 'none';
           successEl.classList.add('visible');
           // Tick up both counters
-          ['counter', 'counter-m'].forEach(id => {
+          ['counter', 'counter-m'].forEach(function(id) {
             const el = document.getElementById(id);
             if (el) el.textContent = String(parseInt(el.textContent, 10) + 1);
           });
         } else {
-          btn.disabled = false;
-          btn.textContent = '> JOIN THE WAITLIST_';
-          errEl.textContent = 'ERR // ' + (res.msg || 'Something went wrong. Try again.');
-          errEl.classList.add('visible');
+          throw new Error(data.message || data.error || 'Unknown error');
         }
-      };
-
-      const script = document.createElement('script');
-      script.src = url;
-      script.onerror = function() {
+      } catch (err) {
         btn.disabled = false;
         btn.textContent = '> JOIN THE WAITLIST_';
-        errEl.textContent = 'ERR // Network error. Please try again.';
+        errEl.textContent = 'ERR // ' + err.message;
         errEl.classList.add('visible');
-      };
-      document.body.appendChild(script);
+      }
     });
 
     /* ─── Counter animation on load ─── */
